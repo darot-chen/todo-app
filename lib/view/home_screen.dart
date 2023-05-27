@@ -1,60 +1,65 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:todo_app_challenge/model/todo_list_model.dart';
+import 'package:todo_app_challenge/provider/todo_list_provider.dart';
 import 'package:todo_app_challenge/view/new_to_do_bottom_sheet.dart';
+import 'package:todo_app_challenge/view/widgets/todo_item.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<TodoListProvider>(context);
     return Scaffold(
       resizeToAvoidBottomInset: true,
       backgroundColor: Theme.of(context).colorScheme.background,
       body: CustomScrollView(
         slivers: [
           buildAppBar(context),
-          SliverList(
-            delegate: SliverChildListDelegate(
-              [
-                buildItemList(
-                  length: 2,
-                  item: ListTile(
-                    horizontalTitleGap: 0,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                    leading: const Icon(Icons.circle_outlined),
-                    title: const Text("Design"),
-                    onTap: () => print('Tap'),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text(
-                    'Done (5)',
-                    style:
-                        Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.outline),
-                  ),
-                ),
-                buildItemList(
-                  length: 10,
-                  isDone: true,
-                  padding: const EdgeInsets.all(16).copyWith(top: 8),
-                  item: ListTile(
-                    horizontalTitleGap: 0,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                    leading: Icon(
-                      Icons.check_circle_rounded,
-                      color: Theme.of(context).colorScheme.primary,
+          if (provider.todoList.isEmpty && provider.completedTodoList.isEmpty)
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height - 300,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.task_alt_outlined,
+                      size: 100,
+                      color: Theme.of(context).colorScheme.outline,
                     ),
-                    title: Text(
-                      "Design",
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: Theme.of(context).colorScheme.outline,
-                          ),
+                    Text(
+                      "No to do",
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleLarge
+                          ?.copyWith(color: Theme.of(context).colorScheme.outline),
                     ),
-                    onTap: () => print('Tap'),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
+          SliverList(
+            delegate: SliverChildListDelegate([
+              if (provider.todoList.isNotEmpty)
+                buildItemList(
+                  context: context,
+                  items: provider.todoList,
+                ),
+              if (provider.completedTodoList.isNotEmpty)
+                buildItemList(
+                  context: context,
+                  items: provider.completedTodoList,
+                  completed: true,
+                  padding: const EdgeInsets.all(16).copyWith(top: 8),
+                ),
+            ]),
           ),
         ],
       ),
@@ -75,6 +80,7 @@ class HomeScreen extends StatelessWidget {
   }
 
   SliverAppBar buildAppBar(BuildContext context) {
+    final provider = Provider.of<TodoListProvider>(context);
     return SliverAppBar(
       centerTitle: false,
       pinned: true,
@@ -94,7 +100,7 @@ class HomeScreen extends StatelessWidget {
               style: TextStyle(color: Colors.black),
             ),
             Text(
-              '16 to-dos',
+              '${provider.totalTodo} to-dos',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(context).colorScheme.outline,
                   ),
@@ -104,7 +110,9 @@ class HomeScreen extends StatelessWidget {
       ),
       actions: [
         IconButton(
-          onPressed: () {},
+          onPressed: () async {
+            provider.clear();
+          },
           icon: Icon(
             Icons.more_vert,
             color: Theme.of(context).colorScheme.onSurface,
@@ -114,29 +122,43 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  ListView buildItemList({
-    required int length,
-    required Widget item,
-    bool isDone = false,
+  Widget buildItemList({
+    required BuildContext context,
+    required List<TodoListModel> items,
+    bool completed = false,
     EdgeInsetsGeometry? padding,
   }) {
-    return ListView.separated(
-      padding: padding ?? const EdgeInsets.all(16),
-      shrinkWrap: true,
-      itemCount: length,
-      physics: const NeverScrollableScrollPhysics(),
-      itemBuilder: (context, index) {
-        Color color = isDone
-            ? Theme.of(context).colorScheme.outline.withOpacity(0.08)
-            : Theme.of(context).colorScheme.primary.withOpacity(0.08);
-        return Material(
-          color: color,
-          borderRadius: BorderRadius.circular(16),
-          clipBehavior: Clip.hardEdge,
-          child: item,
-        );
-      },
-      separatorBuilder: (context, index) => const SizedBox(height: 8),
+    final provider = Provider.of<TodoListProvider>(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (completed)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              'Done (${provider.completedTodoList.length})',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.outline),
+            ),
+          ),
+        ListView.separated(
+          padding: padding ?? const EdgeInsets.all(16),
+          shrinkWrap: true,
+          itemCount: items.length,
+          physics: const NeverScrollableScrollPhysics(),
+          itemBuilder: (context, index) {
+            Color color = completed
+                ? Theme.of(context).colorScheme.outline.withOpacity(0.08)
+                : Theme.of(context).colorScheme.primary.withOpacity(0.08);
+            return Material(
+              color: color,
+              borderRadius: BorderRadius.circular(16),
+              clipBehavior: Clip.hardEdge,
+              child: TodoItem(todo: items[index]),
+            );
+          },
+          separatorBuilder: (context, index) => const SizedBox(height: 8),
+        ),
+      ],
     );
   }
 }
