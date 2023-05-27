@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:todo_app_challenge/theme_config.dart';
+import 'package:todo_app_challenge/config/theme_config.dart';
 
-import 'home_screen.dart';
+import 'view/home_screen.dart';
 
 void main() {
   runApp(const MyApp());
