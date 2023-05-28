@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:todo_app_challenge/model/todo_list_model.dart';
 import 'package:todo_app_challenge/provider/todo_list_provider.dart';
-import 'package:todo_app_challenge/view/new_to_do_bottom_sheet.dart';
+import 'package:todo_app_challenge/view/widgets/new_to_do_bottom_sheet.dart';
 import 'package:todo_app_challenge/view/widgets/todo_app_bar.dart';
-import 'package:todo_app_challenge/view/widgets/todo_item.dart';
+import 'package:todo_app_challenge/view/widgets/todo_list_items.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -49,13 +48,11 @@ class _HomeScreenState extends State<HomeScreen> {
           SliverList(
             delegate: SliverChildListDelegate([
               if (provider.todoList.isNotEmpty)
-                buildItemList(
-                  context: context,
+                TodoListItems(
                   items: provider.todoList,
                 ),
               if (provider.completedTodoList.isNotEmpty)
-                buildItemList(
-                  context: context,
+                TodoListItems(
                   items: provider.completedTodoList,
                   completed: true,
                   padding: const EdgeInsets.all(16).copyWith(top: 8),
@@ -105,47 +102,47 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget buildItemList({
-    required BuildContext context,
-    required List<TodoListModel> items,
-    bool completed = false,
-    EdgeInsetsGeometry? padding,
-  }) {
-    final provider = Provider.of<TodoListProvider>(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (completed)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text(
-              'Done (${provider.completedTodoList.length})',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.outline),
-            ),
-          ),
-        ListView.separated(
-          padding: padding ?? const EdgeInsets.all(16),
-          shrinkWrap: true,
-          itemCount: items.length,
-          physics: const NeverScrollableScrollPhysics(),
-          itemBuilder: (context, index) {
-            Color color = completed
-                ? Theme.of(context).colorScheme.outline.withOpacity(0.08)
-                : Theme.of(context).colorScheme.primary.withOpacity(0.08);
-            return Material(
-              color: color,
-              borderRadius: BorderRadius.circular(16),
-              clipBehavior: Clip.hardEdge,
-              child: TodoItem(
-                completed: completed,
-                index: index,
-                todo: items[index],
-              ),
-            );
-          },
-          separatorBuilder: (context, index) => const SizedBox(height: 8),
-        ),
-      ],
-    );
-  }
+  // Widget buildItemList({
+  //   required BuildContext context,
+  //   required List<TodoListModel> items,
+  //   bool completed = false,
+  //   EdgeInsetsGeometry? padding,
+  // }) {
+  //   final provider = Provider.of<TodoListProvider>(context);
+  //   return Column(
+  //     crossAxisAlignment: CrossAxisAlignment.start,
+  //     children: [
+  //       if (completed)
+  //         Padding(
+  //           padding: const EdgeInsets.symmetric(horizontal: 16),
+  //           child: Text(
+  //             'Done (${provider.completedTodoList.length})',
+  //             style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.outline),
+  //           ),
+  //         ),
+  //       ListView.separated(
+  //         padding: padding ?? const EdgeInsets.all(16),
+  //         shrinkWrap: true,
+  //         itemCount: items.length,
+  //         physics: const NeverScrollableScrollPhysics(),
+  //         itemBuilder: (context, index) {
+  //           Color color = completed
+  //               ? Theme.of(context).colorScheme.outline.withOpacity(0.08)
+  //               : Theme.of(context).colorScheme.primary.withOpacity(0.08);
+  //           return Material(
+  //             color: color,
+  //             borderRadius: BorderRadius.circular(16),
+  //             clipBehavior: Clip.hardEdge,
+  //             child: TodoItem(
+  //               completed: completed,
+  //               index: index,
+  //               todo: items[index],
+  //             ),
+  //           );
+  //         },
+  //         separatorBuilder: (context, index) => const SizedBox(height: 8),
+  //       ),
+  //     ],
+  //   );
+  // }
 }

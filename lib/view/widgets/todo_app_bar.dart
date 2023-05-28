@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:todo_app_challenge/provider/todo_list_provider.dart';
+import 'package:todo_app_challenge/view/search_screen.dart';
 
 class TodoAppBar extends StatelessWidget {
   const TodoAppBar({super.key});
@@ -46,41 +47,53 @@ class TodoAppBar extends StatelessWidget {
             )
           : null,
       actions: [
-        provider.isEdit
-            ? IconButton(
-                onPressed: () => provider.selectAll(),
-                icon: const Icon(Icons.circle_outlined),
-              )
-            : MenuAnchor(
-                alignmentOffset: const Offset(-70, 0),
-                menuChildren: List.generate(menuButtons.length, (index) {
-                  return MenuItemButton(
-                    onPressed: () {
-                      if (index == 1) {
-                        provider.clear();
-                      } else {
-                        provider.isEdit = true;
-                      }
-                    },
-                    child: Text(menuButtons[index]),
-                  );
-                }),
-                builder: (BuildContext context, MenuController controller, Widget? child) {
-                  return IconButton(
-                    onPressed: () async {
-                      if (controller.isOpen) {
-                        controller.close();
-                      } else {
-                        controller.open();
-                      }
-                    },
-                    icon: Icon(
-                      Icons.more_vert,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                  );
+        if (provider.isEdit)
+          IconButton(
+            onPressed: () => provider.selectAll(),
+            icon: const Icon(Icons.circle_outlined),
+          ),
+        if (!provider.isEdit)
+          IconButton(
+            onPressed: () {
+              provider.searchTodoList = provider.todoList;
+              provider.searchCompletedTodoList = provider.completedTodoList;
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const SearchScreen()),
+              );
+            },
+            icon: const Icon(Icons.search),
+          ),
+        if (!provider.isEdit)
+          MenuAnchor(
+            alignmentOffset: const Offset(-70, 0),
+            menuChildren: List.generate(menuButtons.length, (index) {
+              return MenuItemButton(
+                onPressed: () {
+                  if (index == 1) {
+                    provider.clear();
+                  } else {
+                    provider.isEdit = true;
+                  }
                 },
-              ),
+                child: Text(menuButtons[index]),
+              );
+            }),
+            builder: (BuildContext context, MenuController controller, Widget? child) {
+              return IconButton(
+                onPressed: () async {
+                  if (controller.isOpen) {
+                    controller.close();
+                  } else {
+                    controller.open();
+                  }
+                },
+                icon: Icon(
+                  Icons.more_vert,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              );
+            },
+          ),
       ],
     );
   }

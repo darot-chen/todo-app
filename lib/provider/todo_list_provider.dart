@@ -6,7 +6,9 @@ import 'package:todo_app_challenge/service/storage_service.dart';
 
 class TodoListProvider extends ChangeNotifier {
   List<TodoListModel> todoList = [];
+  List<TodoListModel> searchTodoList = [];
   List<TodoListModel> completedTodoList = [];
+  List<TodoListModel> searchCompletedTodoList = [];
 
   int totalTodo = 0;
 
@@ -24,6 +26,14 @@ class TodoListProvider extends ChangeNotifier {
       completedTodoList = userTodo.completedTodoList ?? [];
     }
     _calTotalTodo();
+    _sortList();
+    notifyListeners();
+  }
+
+  searchTodo(String keyword) async {
+    searchTodoList = todoList.where((element) => element.todo!.contains(keyword)).toList();
+    searchCompletedTodoList = completedTodoList.where((element) => element.todo!.contains(keyword)).toList();
+
     notifyListeners();
   }
 

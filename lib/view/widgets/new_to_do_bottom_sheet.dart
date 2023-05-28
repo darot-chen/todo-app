@@ -18,6 +18,7 @@ class NewToDoBottomSheet extends StatefulWidget {
 class _NewToDoBottomSheetState extends State<NewToDoBottomSheet> {
   final TextEditingController textController = TextEditingController();
   String todoTitle = '';
+  bool isEmpty = true;
 
   @override
   void initState() {
@@ -37,7 +38,7 @@ class _NewToDoBottomSheetState extends State<NewToDoBottomSheet> {
   Widget build(BuildContext context) {
     final provider = Provider.of<TodoListProvider>(context);
     textController.addListener(() {
-      todoTitle = textController.text;
+      todoTitle = textController.text.trim();
     });
     return Container(
       width: double.infinity,
@@ -69,22 +70,7 @@ class _NewToDoBottomSheetState extends State<NewToDoBottomSheet> {
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Theme.of(context).colorScheme.onSurface),
               ),
               IconButton(
-                onPressed: () {
-                  if (widget.todo == null) {
-                    TodoListModel todo = TodoListModel(
-                      id: provider.totalTodo,
-                      todo: todoTitle,
-                      completed: false,
-                    );
-                    provider.addTodo(todo);
-                  } else {
-                    TodoListModel newTodo = widget.todo!.copyWith(todo: todoTitle);
-                    provider.updateTodo(newTodo);
-                  }
-
-                  textController.clear();
-                  Navigator.of(context).pop();
-                },
+                onPressed: isEmpty ? null : () => onAddTodo(provider),
                 icon: const Icon(Icons.check),
               ),
             ],
@@ -104,10 +90,65 @@ class _NewToDoBottomSheetState extends State<NewToDoBottomSheet> {
                 border: InputBorder.none,
                 hintText: 'New to-do',
               ),
+              onChanged: (value) {
+                if (value.trim().isNotEmpty && isEmpty) {
+                  setState(() {
+                    isEmpty = false;
+                  });
+                } else if (value.trim().isEmpty && !isEmpty) {
+                  setState(() {
+                    isEmpty = true;
+                  });
+                }
+              },
             ),
           ),
         ],
       ),
+    );
+  }
+
+  onAddTodo(TodoListProvider provider) {
+    if (widget.todo == null) {
+      int findIndex = provider.todoList.indexWhere((element) => element.todo == todoTitle);
+      print('FIND INDEX: $findIndex');
+      if (findIndex >= 0) {
+        showWarningDialog(context);
+        return;
+      } else {
+        TodoListModel todo = TodoListModel(
+          id: provider.totalTodo,
+          todo: todoTitle,
+          completed: false,
+        );
+        provider.addTodo(todo);
+      }
+    } else {
+      TodoListModel newTodo = widget.todo!.copyWith(todo: todoTitle);
+      provider.updateTodo(newTodo);
+    }
+
+    textController.clear();
+    Navigator.of(context).pop();
+  }
+
+  void showWarningDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Duplicate To-do'),
+          content: const Text('This todo is already existed'),
+          actions: [
+            TextButton(
+              child: const Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }

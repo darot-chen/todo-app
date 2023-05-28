@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:todo_app_challenge/model/todo_list_model.dart';
 import 'package:todo_app_challenge/provider/todo_list_provider.dart';
-import 'package:todo_app_challenge/view/new_to_do_bottom_sheet.dart';
+import 'package:todo_app_challenge/view/widgets/new_to_do_bottom_sheet.dart';
 
 class TodoItem extends StatelessWidget {
   final bool completed;
@@ -40,7 +40,7 @@ class TodoItem extends StatelessWidget {
               : null,
         ),
         onTap: () {
-          TodoListModel newTodo = todo.copyWith(isSelected: true);
+          TodoListModel newTodo = todo.copyWith(isSelected: !todo.isSelected);
           provider.updateTodo(newTodo);
         },
         onLongPress: () {},

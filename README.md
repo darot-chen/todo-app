@@ -18,5 +18,8 @@ samples, guidance on mobile development, and a full API reference.
 
 ## Time Estimation working on
 1. Design: 2h
-2. Enhance UI: 1
-3. Functionality(Write to storage): 2:30
+2. Enhance UI: 1h
+3. Functionality(Write to storage): 2:30h
+4. Multiple delete item: 2h
+
+
