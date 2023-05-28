@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:platform_device_id/platform_device_id.dart';
 import 'package:provider/provider.dart';
 import 'package:todo_app_challenge/model/todo_list_model.dart';
 import 'package:todo_app_challenge/model/user_todo_list_model.dart';
@@ -12,6 +13,26 @@ class TodoListProvider extends ChangeNotifier {
   List<TodoListModel> searchCompletedTodoList = [];
 
   int totalTodo = 0;
+
+  bool _isOnline = false;
+  bool get isOnline => _isOnline;
+  set isOnline(bool status) {
+    _isOnline = status;
+    if (!status) load();
+    notifyListeners();
+  }
+
+  bool _isOwner = false;
+  bool get isOwner => _isOwner;
+  set isOwner(bool status) {
+    _isOwner = status;
+  }
+
+  String _userCode = '';
+  String get userCode => _userCode;
+  set userCode(String username) {
+    _userCode = username;
+  }
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -27,7 +48,37 @@ class TodoListProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  load() async {
+  Future<void> shareOnline() async {
+    final String? deviceId = await PlatformDeviceId.getDeviceId;
+    if (deviceId == null) return;
+    userCode = deviceId;
+
+    isOnline = true;
+    isOwner = true;
+
+    _writeToStorage();
+    notifyListeners();
+  }
+
+  Future<void> stopShareOnline() async {
+    isOnline = false;
+    isOwner = false;
+    await _writeToStorage();
+    await load();
+  }
+
+  Future<void> streamData(UserTodoListModel? userTodo) async {
+    if (userTodo != null) {
+      todoList = userTodo.todoList ?? [];
+      completedTodoList = userTodo.completedTodoList ?? [];
+    }
+    _calTotalTodo();
+    _sortList();
+  }
+
+  Future<void> load() async {
+    final String? deviceId = await PlatformDeviceId.getDeviceId;
+    userCode = deviceId ?? '';
     UserTodoListModel? userTodo = await StorageService.read();
     if (userTodo != null) {
       todoList = userTodo.todoList ?? [];
@@ -38,14 +89,14 @@ class TodoListProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  searchTodo(String keyword) async {
+  Future<void> searchTodo(String keyword) async {
     searchTodoList = todoList.where((element) => element.todo!.contains(keyword)).toList();
     searchCompletedTodoList = completedTodoList.where((element) => element.todo!.contains(keyword)).toList();
 
     notifyListeners();
   }
 
-  addTodo(TodoListModel todo) async {
+  Future<void> addTodo(TodoListModel todo) async {
     todoList.add(todo);
     _sortList();
     _calTotalTodo();
@@ -54,7 +105,7 @@ class TodoListProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  updateTodo(TodoListModel newTodo) async {
+  Future<void> updateTodo(TodoListModel newTodo) async {
     if (newTodo.completed == true) {
       completedTodoList[completedTodoList.indexWhere(
         (element) => element.id == newTodo.id,
@@ -70,7 +121,7 @@ class TodoListProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  deleteTodo() async {
+  Future<void> deleteTodo() async {
     todoList = todoList.where((todo) => todo.isSelected == false).toList();
     completedTodoList = completedTodoList.where((todo) => todo.isSelected == false).toList();
 
@@ -79,7 +130,7 @@ class TodoListProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  selectAll({bool cancel = false}) async {
+  Future<void> selectAll({bool cancel = false}) async {
     todoList = todoList.map((e) => e.copyWith(isSelected: !cancel)).toList();
     completedTodoList = completedTodoList.map((e) => e.copyWith(isSelected: !cancel)).toList();
 
@@ -88,7 +139,7 @@ class TodoListProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  markStatus({required TodoListModel todo, required bool completed}) async {
+  Future<void> markStatus({required TodoListModel todo, required bool completed}) async {
     if (completed) {
       completedTodoList.add(todo.copyWith(completed: true));
       todoList.remove(todo);
@@ -102,15 +153,16 @@ class TodoListProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  _writeToStorage() async {
+  Future<void> _writeToStorage() async {
     UserTodoListModel userTodo = UserTodoListModel(
       todoList: todoList,
       completedTodoList: completedTodoList,
     );
-    isLoading = true;
-    await StorageService.write(userTodo);
-    await FirebaseService.addData(userTodo);
-    isLoading = false;
+    if (isOnline) {
+      await FirebaseService.addData(userTodo, userCode);
+    } else {
+      await StorageService.write(userTodo);
+    }
   }
 
   _calTotalTodo() {
@@ -122,7 +174,7 @@ class TodoListProvider extends ChangeNotifier {
     completedTodoList.sort((a, b) => b.id!.compareTo(a.id!));
   }
 
-  clear() async {
+  Future<void> clear() async {
     await StorageService.clear();
     todoList = [];
     completedTodoList = [];

@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:todo_app_challenge/model/user_todo_list_model.dart';
 import 'package:todo_app_challenge/provider/todo_list_provider.dart';
 import 'package:todo_app_challenge/view/widgets/new_to_do_bottom_sheet.dart';
 import 'package:todo_app_challenge/view/widgets/todo_app_bar.dart';
@@ -16,6 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<TodoListProvider>(context);
+
     return Scaffold(
       resizeToAvoidBottomInset: true,
       backgroundColor: Theme.of(context).colorScheme.background,
@@ -47,15 +50,46 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           SliverList(
             delegate: SliverChildListDelegate([
-              if (provider.todoList.isNotEmpty)
-                TodoListItems(
-                  items: provider.todoList,
-                ),
-              if (provider.completedTodoList.isNotEmpty)
-                TodoListItems(
-                  items: provider.completedTodoList,
-                  completed: true,
-                  padding: const EdgeInsets.all(16).copyWith(top: 8),
+              if (!provider.isOnline)
+                Column(children: [
+                  if (provider.todoList.isNotEmpty && !provider.isOnline)
+                    TodoListItems(
+                      items: provider.todoList,
+                    ),
+                  if (provider.completedTodoList.isNotEmpty && !provider.isOnline)
+                    TodoListItems(
+                      items: provider.completedTodoList,
+                      completed: true,
+                      padding: const EdgeInsets.all(16).copyWith(top: 8),
+                    ),
+                ]),
+              if (provider.isOnline)
+                StreamBuilder(
+                  stream: FirebaseFirestore.instance.collection('data').doc(provider.userCode).snapshots(),
+                  builder: (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
+                    if (snapshot.hasError) return const Text('Something went wrong');
+                    if (!snapshot.hasData) return const SizedBox();
+
+                    UserTodoListModel? userTodo = UserTodoListModel.fromJson(
+                      snapshot.data?.data() as Map<String, dynamic>,
+                    );
+                    provider.streamData(userTodo);
+
+                    return Column(
+                      children: [
+                        if (provider.todoList.isNotEmpty)
+                          TodoListItems(
+                            items: provider.todoList,
+                          ),
+                        if (provider.completedTodoList.isNotEmpty)
+                          TodoListItems(
+                            items: provider.completedTodoList,
+                            completed: true,
+                            padding: const EdgeInsets.all(16).copyWith(top: 8),
+                          ),
+                      ],
+                    );
+                  },
                 ),
             ]),
           ),

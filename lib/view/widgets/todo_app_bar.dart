@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:todo_app_challenge/provider/todo_list_provider.dart';
 import 'package:todo_app_challenge/view/search_screen.dart';
+import 'package:todo_app_challenge/view/widgets/my_menu.dart';
 
 class TodoAppBar extends StatelessWidget {
   const TodoAppBar({super.key});
@@ -9,7 +10,7 @@ class TodoAppBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<TodoListProvider>(context);
-    List<String> menuButtons = ['Edit', "Delete All"];
+
     return SliverAppBar(
       centerTitle: false,
       pinned: true,
@@ -20,32 +21,7 @@ class TodoAppBar extends StatelessWidget {
       elevation: 1,
       flexibleSpace: FlexibleSpaceBar(
         titlePadding: const EdgeInsets.all(16),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Text(
-              provider.isEdit ? "Select Items" : "To-dos",
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-            ),
-            AnimatedCrossFade(
-              duration: const Duration(milliseconds: 500),
-              crossFadeState: provider.isLoading ? CrossFadeState.showSecond : CrossFadeState.showFirst,
-              firstChild: Text(
-                provider.isEdit ? '' : '${provider.totalTodo} to-dos',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.outline,
-                    ),
-              ),
-              secondChild: Text(
-                'Uploading to cloud',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.outline,
-                    ),
-              ),
-            ),
-          ],
-        ),
+        title: buildAppBarTitle(provider, context),
       ),
       leading: provider.isEdit
           ? IconButton(
@@ -73,37 +49,36 @@ class TodoAppBar extends StatelessWidget {
             },
             icon: const Icon(Icons.search),
           ),
-        if (!provider.isEdit)
-          MenuAnchor(
-            alignmentOffset: const Offset(-70, 0),
-            menuChildren: List.generate(menuButtons.length, (index) {
-              return MenuItemButton(
-                onPressed: () {
-                  if (index == 1) {
-                    provider.clear();
-                  } else {
-                    provider.isEdit = true;
-                  }
-                },
-                child: Text(menuButtons[index]),
-              );
-            }),
-            builder: (BuildContext context, MenuController controller, Widget? child) {
-              return IconButton(
-                onPressed: () async {
-                  if (controller.isOpen) {
-                    controller.close();
-                  } else {
-                    controller.open();
-                  }
-                },
-                icon: Icon(
-                  Icons.more_vert,
-                  color: Theme.of(context).colorScheme.onSurface,
+        if (!provider.isEdit) const MyMenu(),
+      ],
+    );
+  }
+
+  Column buildAppBarTitle(TodoListProvider provider, BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Text(
+          provider.isEdit ? "Select Items" : "To-dos",
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+        ),
+        AnimatedCrossFade(
+          duration: const Duration(milliseconds: 500),
+          crossFadeState: provider.isLoading ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+          firstChild: Text(
+            provider.isEdit ? '' : '${provider.totalTodo} to-dos',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.outline,
                 ),
-              );
-            },
           ),
+          secondChild: Text(
+            'Uploading to cloud',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.outline,
+                ),
+          ),
+        ),
       ],
     );
   }
