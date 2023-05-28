@@ -74,6 +74,7 @@ class TodoListProvider extends ChangeNotifier {
     }
     _calTotalTodo();
     _sortList();
+    notifyListeners();
   }
 
   Future<void> load() async {

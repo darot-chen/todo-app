@@ -14,13 +14,9 @@ class MyMenu extends StatefulWidget {
 
 class _MyMenuState extends State<MyMenu> {
   final TextEditingController textController = TextEditingController();
-  String userCode = '';
 
   @override
   void initState() {
-    textController.addListener(() {
-      userCode = textController.text;
-    });
     super.initState();
   }
 
@@ -129,7 +125,7 @@ class _MyMenuState extends State<MyMenu> {
             TextButton(
               child: const Text('OK'),
               onPressed: () {
-                provider.userCode = userCode;
+                provider.userCode = textController.text;
                 provider.isOnline = !provider.isOnline;
                 Navigator.of(context).pop(); // Close the dialog
               },
