@@ -36,13 +36,15 @@ class TodoListProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  updateTodo(TodoListModel newTodo, TodoListModel oldTodo) async {
+  updateTodo(TodoListModel newTodo) async {
     if (newTodo.completed == true) {
-      completedTodoList.remove(oldTodo);
-      completedTodoList.add(newTodo);
+      completedTodoList[completedTodoList.indexWhere(
+        (element) => element.id == newTodo.id,
+      )] = newTodo;
     } else {
-      todoList.remove(oldTodo);
-      todoList.add(newTodo);
+      todoList[todoList.indexWhere(
+        (element) => element.id == newTodo.id,
+      )] = newTodo;
     }
 
     _sortList();
@@ -50,9 +52,21 @@ class TodoListProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  deleteTodo(TodoListModel todo) {
-    todoList.remove(todo);
+  deleteTodo() async {
+    todoList = todoList.where((todo) => todo.isSelected == false).toList();
+    completedTodoList = completedTodoList.where((todo) => todo.isSelected == false).toList();
+
     _calTotalTodo();
+    await _writeToStorage();
+    notifyListeners();
+  }
+
+  selectAll({bool cancel = false}) async {
+    todoList = todoList.map((e) => e.copyWith(isSelected: !cancel)).toList();
+    completedTodoList = completedTodoList.map((e) => e.copyWith(isSelected: !cancel)).toList();
+
+    _sortList();
+    await _writeToStorage();
     notifyListeners();
   }
 

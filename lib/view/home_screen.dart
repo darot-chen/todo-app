@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:todo_app_challenge/model/todo_list_model.dart';
 import 'package:todo_app_challenge/provider/todo_list_provider.dart';
 import 'package:todo_app_challenge/view/new_to_do_bottom_sheet.dart';
+import 'package:todo_app_challenge/view/widgets/todo_app_bar.dart';
 import 'package:todo_app_challenge/view/widgets/todo_item.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -21,7 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: Theme.of(context).colorScheme.background,
       body: CustomScrollView(
         slivers: [
-          buildAppBar(context),
+          const TodoAppBar(),
           if (provider.todoList.isEmpty && provider.completedTodoList.isEmpty)
             SliverToBoxAdapter(
               child: SizedBox(
@@ -63,62 +64,44 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        child: const Icon(Icons.add),
-        onPressed: () {
-          showModalBottomSheet(
-            context: context,
-            isScrollControlled: true,
-            useRootNavigator: true,
-            builder: (context) {
-              return const NewToDoBottomSheet();
-            },
-          );
-        },
-      ),
-    );
-  }
-
-  SliverAppBar buildAppBar(BuildContext context) {
-    final provider = Provider.of<TodoListProvider>(context);
-    return SliverAppBar(
-      centerTitle: false,
-      pinned: true,
-      snap: false,
-      floating: false,
-      collapsedHeight: 80,
-      expandedHeight: 150.0,
-      elevation: 1,
-      flexibleSpace: FlexibleSpaceBar(
-        titlePadding: const EdgeInsets.all(16),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            const Text(
-              "To-dos",
-              style: TextStyle(color: Colors.black),
-            ),
-            Text(
-              '${provider.totalTodo} to-dos',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        IconButton(
-          onPressed: () async {
-            provider.clear();
-          },
-          icon: Icon(
-            Icons.more_vert,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
-        ),
-      ],
+      bottomNavigationBar: provider.isEdit
+          ? InkWell(
+              onTap: () => provider.deleteTodo(),
+              child: Container(
+                decoration: const BoxDecoration(
+                  border: Border(top: BorderSide()),
+                ),
+                padding: EdgeInsets.only(
+                  left: 16,
+                  right: 16,
+                  top: 8,
+                  bottom: MediaQuery.of(context).padding.bottom + 16,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Icon(Icons.delete),
+                    Text('Delete'),
+                  ],
+                ),
+              ),
+            )
+          : null,
+      floatingActionButton: !provider.isEdit
+          ? FloatingActionButton(
+              child: const Icon(Icons.add),
+              onPressed: () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  useRootNavigator: true,
+                  builder: (context) {
+                    return const NewToDoBottomSheet();
+                  },
+                );
+              },
+            )
+          : null,
     );
   }
 
@@ -153,7 +136,11 @@ class _HomeScreenState extends State<HomeScreen> {
               color: color,
               borderRadius: BorderRadius.circular(16),
               clipBehavior: Clip.hardEdge,
-              child: TodoItem(todo: items[index]),
+              child: TodoItem(
+                completed: completed,
+                index: index,
+                todo: items[index],
+              ),
             );
           },
           separatorBuilder: (context, index) => const SizedBox(height: 8),

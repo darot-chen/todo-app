@@ -5,16 +5,47 @@ import 'package:todo_app_challenge/provider/todo_list_provider.dart';
 import 'package:todo_app_challenge/view/new_to_do_bottom_sheet.dart';
 
 class TodoItem extends StatelessWidget {
+  final bool completed;
+  final int index;
   final TodoListModel todo;
 
   const TodoItem({
     super.key,
+    required this.completed,
+    required this.index,
     required this.todo,
   });
 
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<TodoListProvider>(context);
+    if (provider.isEdit) {
+      return ListTile(
+        horizontalTitleGap: 0,
+        contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        trailing: todo.isSelected == true
+            ? Icon(
+                Icons.check_circle_rounded,
+                color: Theme.of(context).colorScheme.primary,
+              )
+            : const Icon(Icons.circle_outlined),
+        title: Text(
+          todo.todo ?? '',
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: todo.completed == true
+              ? Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: Theme.of(context).colorScheme.outline,
+                  )
+              : null,
+        ),
+        onTap: () {
+          TodoListModel newTodo = todo.copyWith(isSelected: true);
+          provider.updateTodo(newTodo);
+        },
+        onLongPress: () {},
+      );
+    }
     return ListTile(
       horizontalTitleGap: 0,
       contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 0).copyWith(right: 16),
@@ -51,7 +82,7 @@ class TodoItem extends StatelessWidget {
           },
         );
       },
-      onLongPress: () {},
+      onLongPress: () => provider.isEdit = true,
     );
   }
 }

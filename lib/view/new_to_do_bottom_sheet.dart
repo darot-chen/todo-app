@@ -79,7 +79,7 @@ class _NewToDoBottomSheetState extends State<NewToDoBottomSheet> {
                     provider.addTodo(todo);
                   } else {
                     TodoListModel newTodo = widget.todo!.copyWith(todo: todoTitle);
-                    provider.updateTodo(newTodo, widget.todo!);
+                    provider.updateTodo(newTodo);
                   }
 
                   textController.clear();
