@@ -28,11 +28,21 @@ class TodoAppBar extends StatelessWidget {
               provider.isEdit ? "Select Items" : "To-dos",
               style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
             ),
-            Text(
-              provider.isEdit ? '' : '${provider.totalTodo} to-dos',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
+            AnimatedCrossFade(
+              duration: const Duration(milliseconds: 500),
+              crossFadeState: provider.isLoading ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+              firstChild: Text(
+                provider.isEdit ? '' : '${provider.totalTodo} to-dos',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+              ),
+              secondChild: Text(
+                'Uploading to cloud',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+              ),
             ),
           ],
         ),

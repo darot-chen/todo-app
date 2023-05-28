@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:todo_app_challenge/model/todo_list_model.dart';
 import 'package:todo_app_challenge/model/user_todo_list_model.dart';
+import 'package:todo_app_challenge/service/firebase_service.dart';
 import 'package:todo_app_challenge/service/storage_service.dart';
 
 class TodoListProvider extends ChangeNotifier {
@@ -11,6 +12,13 @@ class TodoListProvider extends ChangeNotifier {
   List<TodoListModel> searchCompletedTodoList = [];
 
   int totalTodo = 0;
+
+  bool _isLoading = false;
+  bool get isLoading => _isLoading;
+  set isLoading(bool loading) {
+    _isLoading = loading;
+    notifyListeners();
+  }
 
   bool _isEdit = false;
   bool get isEdit => _isEdit;
@@ -99,8 +107,10 @@ class TodoListProvider extends ChangeNotifier {
       todoList: todoList,
       completedTodoList: completedTodoList,
     );
-
+    isLoading = true;
     await StorageService.write(userTodo);
+    await FirebaseService.addData(userTodo);
+    isLoading = false;
   }
 
   _calTotalTodo() {

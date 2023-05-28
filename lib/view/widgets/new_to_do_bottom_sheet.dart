@@ -111,7 +111,6 @@ class _NewToDoBottomSheetState extends State<NewToDoBottomSheet> {
   onAddTodo(TodoListProvider provider) {
     if (widget.todo == null) {
       int findIndex = provider.todoList.indexWhere((element) => element.todo == todoTitle);
-      print('FIND INDEX: $findIndex');
       if (findIndex >= 0) {
         showWarningDialog(context);
         return;
